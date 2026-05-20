@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인공신경망</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --dark: #003d4d;
+    --accent: #00c996;
+    --white: #ffffff;
+    --dark-80: rgba(0,61,77,0.8);
+    --dark-30: rgba(0,61,77,0.3);
+    --accent-20: rgba(0,201,150,0.2);
+    --accent-10: rgba(0,201,150,0.1);
+    --slide-w: 1280px;
+    --slide-h: 720px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #001f28;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 32px;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  /* ── NAV ── */
+  .nav {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 999;
+    display: flex;
+    gap: 8px;
+  }
+  .nav button {
+    background: var(--dark);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all .2s;
+  }
+  .nav button:hover { background: var(--accent); color: var(--dark); }
+
+  /* ── SLIDE BASE ── */
+  .slide {
+    width: var(--slide-w);
+    height: var(--slide-h);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+
+  /* slide number badge */
+  .slide-num {
+    position: absolute;
+    bottom: 22px;
+    right: 32px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 01 — COVER
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s1 {
+    background: var(--dark);
+  }
+  .s1-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 70% at 80% 50%, rgba(0,201,150,0.12) 0%, transparent 70%);
+  }
+  /* grid dots */
+  .s1-dots {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(0,201,150,0.18) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.6;
+  }
+  .s1-content {
+    position: relative; z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 100px;
+  }
+  .s1-label {
+    font-size: 12px;
+    letter-spacing: 6px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    font-weight: 500;
+  }
+  .s1-title {
+    font-size: 88px;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .s1-title span { color: var(--accent); }
+  .s1-sub {
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 300;
+    margin-bottom: 56px;
+    letter-spacing: 1px;
+  }
+  .s1-tags {
+    display: flex;
+    gap: 12px;
+  }
+  .s1-tag {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 20px;
+    border-radius: 2px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  /* neural net SVG deco */
+  .s1-deco {
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.18;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 02 — TABLE OF CONTENTS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s2 {
+    background: var(--white);
+  }
+  .s2-left {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 320px;
+    background: var(--dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 48px;
+  }
+  .s2-left-label {
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .s2-left-title {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.1;
+  }
+  .s2-left-title span { color: var(--accent); }
+  .s2-left-desc {
+    margin-top: 24px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+  .s2-right {
+    position: absolute;
+    left: 320px; right: 0; top: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 72px;
+    gap: 20px;
+  }
+  .toc-item {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 28px;
+    border: 1.5px solid rgba(0,61,77,0.1);
+    border-radius: 4px;
+    background: #f8fffe;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .toc-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+  .toc-num {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 48px;
+    line-height: 1;
+  }
+  .toc-text h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 3px;
+  }
+  .toc-text p {
+    font-size: 12px;
+    color: rgba(0,61,77,0.5);
+    font-weight: 400;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SECTION DIVIDER SLIDE
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-div {
+    background: var(--dark);
+  }
+  .s-div-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,201,150,0.08) 0%, transparent 60%);
+  }
+  .s-div-content {
+    position: relative; z-index: 2;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 120px;
+    gap: 60px;
+  }
+  .s-div-num {
+    font-size: 160px;
+    font-weight: 900;
+    color: rgba(0,201,150,0.15);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .s-div-text {}
+  .s-div-label {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .s-div-title {
+    font-size: 56px;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.1;
+  }
+  .s-div-desc {
+    margin-top: 20px;
+    font-size: 16px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.7;
+    max-width: 520px;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     CONTENT SLIDES — shared
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-content {
+    background: var(--white);
+  }
+  .s-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 72px;
+    background: var(--dark);
+    display: flex;
+    align-items: center;
+    padding: 0 52px;
+    gap: 16px;
+  }
+  .s-header-section {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .s-header-sep { color: rgba(255,255,255,0.2); font-size: 14px; }
+  .s-header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .s-body {
+    position: absolute;
+    top: 72px; left: 0; right: 0; bottom: 0;
+    padding: 40px 52px 32px;
+  }
+
+  /* ── cards / boxes ── */
+  .card {
+    background: #f5fffe;
+    border: 1.5px solid rgba(0,201,150,0.25);
+    border-radius: 6px;
+    padding: 22px 24px;
+  }
+  .card-dark {
+    background: var(--dark);
+    border-radius: 6px;
+    padding: 22px 24px;
+  }
+  .card h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .card-dark h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .card p, .card li {
+    font-size: 14px;
+    color: var(--dark);
+    line-height: 1.75;
+    font-weight: 400;
+  }
+  .card-dark p, .card-dark li {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.75;
+  }
+  .card li { margin-left: 18px; }
+  .accent-text { color: var(--accent) !important; font-weight: 700 !important; }
+  .white-text { color: var(--white) !important; }
+
+  /* formula box */
+  .formula {
+    background: var(--dark);
+    border-radius: 6px;
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--accent);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* tag chips */
+  .chip {
+    display: inline-block;
+    background: var(--accent-20);
+    border: 1px solid var(--accent);
+    color: var(--dark);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* two-col grid */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* step row */
+  .steps {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    height: 120px;
+  }
+  .step {
+    flex: 1;
+    background: var(--accent-10);
+    border: 1.5px solid rgba(0,201,150,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 10px;
+    position: relative;
+    text-align: center;
+  }
+  .step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 20px;
+    font-weight: 700;
+    z-index: 5;
+  }
+  .step-num {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .step-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+  .step-desc {
+    font-size: 10px;
+    color: rgba(0,61,77,0.55);
+    line-height: 1.4;
+  }
+
+  /* compare row */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .compare-bad {
+    border: 1.5px solid rgba(255,100,100,0.4);
+    background: rgba(255,100,100,0.04);
+    border-radius: 6px;
+    padding: 18px 20px;
+  }
+  .compare-good {
+    border: 1.5px solid rgba(0,201,150,0.4);
+    background: var(--accent-10);
+    border-radius: 6px;
+    padding: 18px 20px;
+  }
+  .compare-bad h4 { color: #e05555 !important; }
+  .compare-good h4 { color: var(--accent) !important; }
+  .compare h4 {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .compare li {
+    font-size: 13px;
+    color: var(--dark);
+    line-height: 1.65;
+    margin-left: 16px;
+    margin-bottom: 2px;
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SPECIFIC SLIDE LAYOUTS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  /* S4 — Sigmoid curve SVG inline */
+  .graph-area {
+    background: var(--dark);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  /* backprop table */
+  .bp-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .bp-table th {
+    background: var(--dark);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+  }
+  .bp-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--dark);
+    border-bottom: 1px solid rgba(0,201,150,0.12);
+  }
+  .bp-table tr:nth-child(even) td { background: var(--accent-10); }
+  .bp-table .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); font-weight: 600; }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     OUTRO
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-outro {
+    background: var(--dark);
+  }
+  .s-outro-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 20% 60%, rgba(0,201,150,0.1) 0%, transparent 65%);
+  }
+  .s-outro-content {
+    position: relative; z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .s-outro-title {
+    font-size: 64px;
+    font-weight: 900;
+    color: var(--white);
+  }
+  .s-outro-title span { color: var(--accent); }
+  .s-outro-loop {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .loop-item {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    padding: 8px 20px;
+    border: 1px solid rgba(0,201,150,0.3);
+    background: rgba(0,201,150,0.05);
+  }
+  .loop-arrow {
+    font-size: 16px;
+    color: var(--accent);
+    padding: 0 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <button onclick="scrollToSlide(0)">표지</button>
+  <button onclick="scrollToSlide(1)">목차</button>
+  <button onclick="scrollToSlide(2)">활성화함수</button>
+  <button onclick="scrollToSlide(5)">순전파</button>
+  <button onclick="scrollToSlide(7)">역전파</button>
+  <button onclick="scrollToSlide(10)">실습예제</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     SLIDE 01 — COVER
+══════════════════════════════════ -->
+<div class="slide s1" id="slide-0">
+  <div class="s1-bg"></div>
+  <div class="s1-dots"></div>
+
+  <!-- neural net deco -->
+  <svg class="s1-deco" width="380" height="380" viewBox="0 0 380 380">
+    <!-- connections -->
+    <line x1="60" y1="80" x2="190" y2="110" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="80" x2="190" y2="190" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="80" x2="190" y2="270" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="190" x2="190" y2="110" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="190" x2="190" y2="190" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="190" x2="190" y2="270" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="300" x2="190" y2="110" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="300" x2="190" y2="190" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="60" y1="300" x2="190" y2="270" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="190" y1="110" x2="310" y2="140" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="190" y1="110" x2="310" y2="240" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="190" y1="190" x2="310" y2="140" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="190" y1="190" x2="310" y2="240" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="190" y1="270" x2="310" y2="140" stroke="#00c996" stroke-width="1.5"/>
+    <line x1="190" y1="270" x2="310" y2="240" stroke="#00c996" stroke-width="1.5"/>
+    <!-- nodes -->
+    <circle cx="60" cy="80" r="16" fill="none" stroke="#00c996" stroke-width="2"/>
+    <circle cx="60" cy="190" r="16" fill="none" stroke="#00c996" stroke-width="2"/>
+    <circle cx="60" cy="300" r="16" fill="none" stroke="#00c996" stroke-width="2"/>
+    <circle cx="190" cy="110" r="16" fill="none" stroke="#00c996" stroke-width="2"/>
+    <circle cx="190" cy="190" r="16" fill="#003d4d" stroke="#00c996" stroke-width="3"/>
+    <circle cx="190" cy="270" r="16" fill="none" stroke="#00c996" stroke-width="2"/>
+    <circle cx="310" cy="140" r="16" fill="none" stroke="#00c996" stroke-width="2"/>
+    <circle cx="310" cy="240" r="16" fill="none" stroke="#00c996" stroke-width="2"/>
+  </svg>
+
+  <div class="s1-content">
+    <div class="s1-label">Deep Learning Foundation</div>
+    <div class="s1-title">인공<span>신경망</span></div>
+    <div class="s1-sub">Activation Function · Forward Propagation · Backpropagation</div>
+    <div class="s1-tags">
+      <div class="s1-tag">활성화 함수</div>
+      <div class="s1-tag">순전파</div>
+      <div class="s1-tag">오차 역전파</div>
+    </div>
+  </div>
+  <div class="slide-num">01 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 02 — TABLE OF CONTENTS
+══════════════════════════════════ -->
+<div class="slide s2" id="slide-1">
+  <div class="s2-left">
+    <div class="s2-left-label">Contents</div>
+    <div class="s2-left-title">목<span>차</span></div>
+    <div class="s2-left-desc">인공신경망의 핵심 원리인<br>활성화 함수, 순전파,<br>오차 역전파 및<br>실습 예제를 다룹니다.</div>
+  </div>
+  <div class="s2-right">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-text">
+        <h3>활성화 함수 (Activation Function)</h3>
+        <p>Sigmoid의 개념과 한계 · ReLU의 등장과 특성 · 비선형성의 역할</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-text">
+        <h3>순전파 (Forward Propagation)</h3>
+        <p>데이터 흐름 · 행렬 연산 · 각 레이어의 역할 · 손실 계산</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-text">
+        <h3>오차 역전파 (Backpropagation)</h3>
+        <p>연쇄법칙 · 전치 행렬 활용 · 가중치 업데이트 · 경사하강법</p>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-text">
+        <h3>실습 예제 — 아이리스 분류하기</h3>
+        <p>신경망을 활용한 Iris 데이터셋 분류 실습 프로젝트</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">02 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 03 — SECTION 01 DIVIDER
+══════════════════════════════════ -->
+<div class="slide s-div" id="slide-2">
+  <div class="s-div-bg"></div>
+  <div class="s-div-content">
+    <div class="s-div-num">01</div>
+    <div class="s-div-text">
+      <div class="s-div-label">Section 01</div>
+      <div class="s-div-title">활성화 함수<br><span style="color:var(--accent)">Activation Function</span></div>
+      <div class="s-div-desc">직선만으로는 복잡한 세계를 표현할 수 없다.<br>비선형성이 딥러닝을 가능하게 한다.</div>
+    </div>
+  </div>
+  <div class="slide-num">03 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 04 — Sigmoid
+══════════════════════════════════ -->
+<div class="slide s-content" id="slide-3">
+  <div class="s-header">
+    <span class="s-header-section">활성화 함수</span>
+    <span class="s-header-sep">|</span>
+    <span class="s-header-title">Sigmoid 함수</span>
+  </div>
+  <div class="s-body" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+    <!-- left -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="card">
+        <h4>핵심 특성</h4>
+        <ul>
+          <li><span class="accent-text">비선형성</span> — S자 형태의 곡선으로 휘어짐</li>
+          <li><span class="accent-text">확률 변환</span> — 어떤 실수도 0~1 사이로 압축</li>
+          <li>이진 분류 문제에 핵심적으로 활용</li>
+          <li>출력 0.5 이상 → 클래스 1 / 미만 → 클래스 0</li>
+        </ul>
+      </div>
+      <div class="formula">σ(x) = 1 / (1 + e<sup style="font-size:12px">−x</sup>)</div>
+      <div class="card" style="background:rgba(255,100,100,0.04); border-color:rgba(255,100,100,0.3);">
+        <h4 style="color:#e05555;">한계점</h4>
+        <ul style="list-style:none; margin:0;">
+          <li style="color:var(--dark);">① <b>기울기 소실</b> — x가 커질수록 기울기→0</li>
+          <li style="color:var(--dark);">② <b>역전파 방해</b> — 깊은 층까지 오차 전달 불가</li>
+          <li style="color:var(--dark);">③ <b>학습 불가</b> — 깊은 신경망에서 오차 소멸</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- right: sigmoid graph -->
+    <div class="graph-area">
+      <svg width="360" height="280" viewBox="0 0 360 280">
+        <!-- axes -->
+        <line x1="30" y1="240" x2="330" y2="240" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+        <line x1="30" y1="10" x2="30" y2="240" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+        <!-- y labels -->
+        <text x="14" y="244" fill="rgba(255,255,255,0.4)" font-size="11">0</text>
+        <text x="14" y="144" fill="rgba(255,255,255,0.4)" font-size="11">.5</text>
+        <text x="14" y="20" fill="rgba(255,255,255,0.4)" font-size="11">1</text>
+        <!-- dashed lines -->
+        <line x1="30" y1="140" x2="330" y2="140" stroke="rgba(0,201,150,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="30" y1="20" x2="330" y2="20" stroke="rgba(0,201,150,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- sigmoid curve path -->
+        <path d="M 30,238 C 50,236 70,230 90,220 110,208 130,188 150,165 170,142 190,118 210,98 230,78 250,62 270,52 290,44 310,38 330,36"
+              fill="none" stroke="#00c996" stroke-width="2.5"/>
+        <!-- vanishing gradient annotation -->
+        <text x="240" y="30" fill="rgba(255,100,100,0.8)" font-size="10">기울기 ≈ 0</text>
+        <line x1="270" y1="35" x2="290" y2="46" stroke="rgba(255,100,100,0.6)" stroke-width="1"/>
+        <text x="50" y="235" fill="rgba(255,100,100,0.8)" font-size="10">기울기 ≈ 0</text>
+        <line x1="80" y1="228" x2="70" y2="232" stroke="rgba(255,100,100,0.6)" stroke-width="1"/>
+        <!-- label -->
+        <text x="155" y="270" fill="rgba(0,201,150,0.7)" font-size="13" font-weight="bold">σ(x)</text>
+      </svg>
+    </div>
+  </div>
+  <div class="slide-num">04 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 05 — ReLU
+══════════════════════════════════ -->
+<div class="slide s-content" id="slide-4">
+  <div class="s-header">
+    <span class="s-header-section">활성화 함수</span>
+    <span class="s-header-sep">|</span>
+    <span class="s-header-title">ReLU 함수 — Sigmoid의 한계 극복</span>
+  </div>
+  <div class="s-body" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+    <!-- left -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="formula" style="font-size:20px; padding:18px;">ReLU(x) = max(0, x)</div>
+      <div class="card">
+        <h4>장점</h4>
+        <ul>
+          <li><span class="accent-text">간단한 규칙</span> — 음수는 0, 양수는 그대로</li>
+          <li><span class="accent-text">기울기 유지</span> — 양수 구간 기울기 = 1 (소실 없음)</li>
+          <li><span class="accent-text">연산 효율</span> — 지수 연산 없이 최고 효율</li>
+          <li>깊은 네트워크에서도 오차 전달 가능</li>
+        </ul>
+      </div>
+      <div class="card" style="background:rgba(255,200,50,0.05); border-color:rgba(255,200,50,0.3);">
+        <h4 style="color:#ccaa00;">주의 — Dying ReLU</h4>
+        <p style="font-size:13px; color:var(--dark);">음수 입력 시 노드가 완전히 비활성화되어<br>학습이 중단되는 현상 발생 가능</p>
+      </div>
+    </div>
+
+    <!-- right: ReLU graph + comparison -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="graph-area" style="flex:1;">
+        <svg width="340" height="190" viewBox="0 0 340 190">
+          <line x1="20" y1="170" x2="320" y2="170" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <line x1="170" y1="10" x2="170" y2="170" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <!-- ReLU path: flat left, diagonal right -->
+          <path d="M 20,170 L 170,170 L 320,20" fill="none" stroke="#00c996" stroke-width="3"/>
+          <!-- Dead zone annotation -->
+          <rect x="20" y="155" width="150" height="18" fill="rgba(255,100,100,0.15)" rx="2"/>
+          <text x="60" y="167" fill="rgba(255,100,100,0.8)" font-size="10">Dead Zone (음수→0)</text>
+          <!-- slope annotation -->
+          <text x="240" y="80" fill="rgba(0,201,150,0.8)" font-size="11">기울기 = 1</text>
+          <text x="165" y="185" fill="rgba(255,255,255,0.4)" font-size="11">0</text>
+        </svg>
+      </div>
+      <!-- Sigmoid vs ReLU compare -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="background:rgba(255,100,100,0.06); border:1px solid rgba(255,100,100,0.25); border-radius:4px; padding:12px 14px;">
+          <div style="font-size:10px; font-weight:700; color:#e05555; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">Sigmoid</div>
+          <div style="font-size:12px; color:var(--dark); line-height:1.6;">기울기 소실<br>깊은 층 학습 ✗<br>지수 연산 필요</div>
+        </div>
+        <div style="background:var(--accent-10); border:1px solid rgba(0,201,150,0.3); border-radius:4px; padding:12px 14px;">
+          <div style="font-size:10px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">ReLU</div>
+          <div style="font-size:12px; color:var(--dark); line-height:1.6;">기울기 유지<br>깊은 층 학습 ✓<br>연산 효율 최상</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">05 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 06 — SECTION 02 DIVIDER
+══════════════════════════════════ -->
+<div class="slide s-div" id="slide-5">
+  <div class="s-div-bg"></div>
+  <div class="s-div-content">
+    <div class="s-div-num">02</div>
+    <div class="s-div-text">
+      <div class="s-div-label">Section 02</div>
+      <div class="s-div-title">순전파<br><span style="color:var(--accent)">Forward Propagation</span></div>
+      <div class="s-div-desc">입력층에서 출력층까지 데이터가 흐르며<br>예측값을 만들어내는 과정.</div>
+    </div>
+  </div>
+  <div class="slide-num">06 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 07 — Forward Propagation
+══════════════════════════════════ -->
+<div class="slide s-content" id="slide-6">
+  <div class="s-header">
+    <span class="s-header-section">순전파</span>
+    <span class="s-header-sep">|</span>
+    <span class="s-header-title">Forward Propagation — 데이터 흐름</span>
+  </div>
+  <div class="s-body" style="display:flex; flex-direction:column; gap:18px;">
+
+    <!-- steps -->
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">①</div>
+        <div class="step-label">데이터 입력</div>
+        <div class="step-desc">학습 데이터를<br>입력층(Input Layer)에 주입</div>
+      </div>
+      <div class="step">
+        <div class="step-num">②</div>
+        <div class="step-label">합산 계산</div>
+        <div class="step-desc">net = Σwᵢxᵢ<br>가중치×입력값 합산</div>
+      </div>
+      <div class="step">
+        <div class="step-num">③</div>
+        <div class="step-label">활성화 함수</div>
+        <div class="step-desc">ReLU(은닉층)<br>Sigmoid(출력층)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">④</div>
+        <div class="step-label">출력 & 오차</div>
+        <div class="step-desc">Loss = ŷ − y<br>예측값과 정답 비교</div>
+      </div>
+    </div>
+
+    <!-- bottom two col -->
+    <div class="two-col" style="flex:1;">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card">
+          <h4>은닉층 — ReLU 사용</h4>
+          <p>음수 신호를 0으로 차단하여 불필요한 뉴런 비활성화.<br>
+          깊은 네트워크에서도 <span class="accent-text">기울기 소실 없이</span> 학습 가능.</p>
+        </div>
+        <div class="card">
+          <h4>출력층 — Sigmoid 사용</h4>
+          <p>결과를 <span class="accent-text">0~1 사이 확률값</span>으로 압축.<br>
+          이진 분류에서 최종 예측값을 확률로 해석하기 위해 사용.</p>
+        </div>
+      </div>
+      <div class="card-dark" style="display:flex; flex-direction:column; justify-content:center; gap:14px;">
+        <h4>행렬 연산으로 표현</h4>
+        <div style="background:rgba(0,201,150,0.1); border-radius:4px; padding:12px 16px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); line-height:2;">
+          X = 입력 행렬 (n × features)<br>
+          Y = X · W   <span style="color:rgba(255,255,255,0.4); font-size:11px;">← 순전파</span><br>
+          O = σ(Y)   <span style="color:rgba(255,255,255,0.4); font-size:11px;">← 활성화</span><br>
+          Loss = ŷ − y
+        </div>
+        <p style="font-size:12px; color:rgba(255,255,255,0.45); line-height:1.6;">행렬 연산으로 수천 개의 가중치를<br>동시에 처리 → 연산 효율 극대화</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">07 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 08 — SECTION 03 DIVIDER
+══════════════════════════════════ -->
+<div class="slide s-div" id="slide-7">
+  <div class="s-div-bg"></div>
+  <div class="s-div-content">
+    <div class="s-div-num">03</div>
+    <div class="s-div-text">
+      <div class="s-div-label">Section 03</div>
+      <div class="s-div-title">오차 역전파<br><span style="color:var(--accent)">Backpropagation</span></div>
+      <div class="s-div-desc">오차를 역방향으로 전달하며<br>각 가중치를 얼마나 수정할지 계산한다.</div>
+    </div>
+  </div>
+  <div class="slide-num">08 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 09 — Backpropagation
+══════════════════════════════════ -->
+<div class="slide s-content" id="slide-8">
+  <div class="s-header">
+    <span class="s-header-section">오차 역전파</span>
+    <span class="s-header-sep">|</span>
+    <span class="s-header-title">Backpropagation — 연쇄법칙과 가중치 업데이트</span>
+  </div>
+  <div class="s-body" style="display:flex; flex-direction:column; gap:16px;">
+
+    <!-- three col top -->
+    <div class="three-col">
+      <div style="background:var(--accent-10); border:1.5px solid rgba(0,201,150,0.3); border-radius:4px; padding:16px 18px;">
+        <div style="font-size:10px; font-weight:700; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:8px;">① 순전파</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--dark);">Output = X · W</div>
+        <div style="font-size:12px; color:rgba(0,61,77,0.55); margin-top:6px;">예측값 생성 → Loss 계산</div>
+      </div>
+      <div style="background:var(--accent-10); border:1.5px solid rgba(0,201,150,0.3); border-radius:4px; padding:16px 18px;">
+        <div style="font-size:10px; font-weight:700; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:8px;">② 오차 역전달 (dX)</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--dark);">dX = dY · Wᵀ</div>
+        <div style="font-size:12px; color:rgba(0,61,77,0.55); margin-top:6px;">이전 층으로 오차 신호 전달</div>
+      </div>
+      <div style="background:var(--accent-10); border:1.5px solid rgba(0,201,150,0.3); border-radius:4px; padding:16px 18px;">
+        <div style="font-size:10px; font-weight:700; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:8px;">③ 가중치 업데이트 (dW)</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--dark);">dW = Xᵀ · dY</div>
+        <div style="font-size:12px; color:rgba(0,61,77,0.55); margin-top:6px;">현재 층의 가중치 W 수정</div>
+      </div>
+    </div>
+
+    <!-- table -->
+    <div style="flex:1;">
+      <table class="bp-table">
+        <thead>
+          <tr>
+            <th>결과물</th>
+            <th>역할</th>
+            <th>수식</th>
+            <th>비유</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="mono">dX</span></td>
+            <td>신호 전달</td>
+            <td><span class="mono">dX = dY · Wᵀ</span></td>
+            <td style="font-size:12px; color:rgba(0,61,77,0.6);">"뒷 층에 이만큼 고쳐달래요!"</td>
+          </tr>
+          <tr>
+            <td><span class="mono">dW</span></td>
+            <td>성능 개선</td>
+            <td><span class="mono">dW = Xᵀ · dY</span></td>
+            <td style="font-size:12px; color:rgba(0,61,77,0.6);">"내 가중치를 요만큼 깎아야겠군."</td>
+          </tr>
+          <tr>
+            <td><span class="mono">W_new</span></td>
+            <td>가중치 갱신</td>
+            <td><span class="mono">W_new = W_old − α · dW</span></td>
+            <td style="font-size:12px; color:rgba(0,61,77,0.6);">α = 학습률 (보폭의 크기)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- bottom row: chain rule + transpose note -->
+    <div class="two-col">
+      <div class="card">
+        <h4>연쇄법칙 (Chain Rule)</h4>
+        <p style="font-size:13px;">∂E/∂w = (∂E/∂a) · (∂a/∂z) · (∂z/∂w)<br>
+        각 레이어의 변화율을 <span class="accent-text">순서대로 곱하여</span><br>
+        입력 가중치까지 오차를 역방향으로 전달.</p>
+      </div>
+      <div class="card">
+        <h4>전치 행렬 (Wᵀ) 의 역할</h4>
+        <p style="font-size:13px;">역전파 시 오차를 <span class="accent-text">입력 데이터의 차원</span>에<br>
+        맞춰 전달하기 위해 전치 행렬 사용.<br>
+        레이어를 아무리 깊게 쌓아도 동일 원리 적용.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">09 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 11 — SECTION 04 DIVIDER
+══════════════════════════════════ -->
+<div class="slide s-div" id="slide-10">
+  <div class="s-div-bg"></div>
+  <div class="s-div-content">
+    <div class="s-div-num">04</div>
+    <div class="s-div-text">
+      <div class="s-div-label">Section 04</div>
+      <div class="s-div-title">실습 예제<br><span style="color:var(--accent)">아이리스 분류하기</span></div>
+      <div class="s-div-desc">지금까지 배운 신경망 원리를 직접 적용해보는<br>Iris 데이터셋 분류 실습 프로젝트.</div>
+    </div>
+  </div>
+  <div class="slide-num">10 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 11 — 실습 예제 콘텐츠
+══════════════════════════════════ -->
+<div class="slide s-content" id="slide-11">
+  <div class="s-header">
+    <span class="s-header-section">실습 예제</span>
+    <span class="s-header-sep">|</span>
+    <span class="s-header-title">아이리스 분류하기</span>
+  </div>
+  <div class="s-body" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0;">
+    <a href="http://bit.ly/4wEZ4EF" target="_blank" style="
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--dark);
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      border-radius: 6px;
+      padding: 20px 40px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+    " onmouseover="this.style.background='#00c996';this.style.color='#003d4d';"
+       onmouseout="this.style.background='#003d4d';this.style.color='#00c996';">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/>
+        <line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+      프로젝트 상세 보기
+    </a>
+  </div>
+  <div class="slide-num">11 / 13</div>
+</div>
+
+<!-- ══════════════════════════════════
+     SLIDE 13 — OUTRO
+══════════════════════════════════ -->
+<div class="slide s-outro" id="slide-12">
+  <div class="s-outro-bg"></div>
+  <!-- dots -->
+  <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,201,150,0.12) 1px,transparent 1px);background-size:36px 36px;opacity:0.5;"></div>
+  <div class="s-outro-content">
+    <div style="font-size:11px; letter-spacing:6px; color:var(--accent); text-transform:uppercase;">Summary</div>
+    <div class="s-outro-title">학습의 <span>순환</span></div>
+    <div class="s-outro-loop">
+      <div class="loop-item">순전파<br><span style="font-size:10px; color:rgba(255,255,255,0.4);">예측값 생성</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-item">손실 계산<br><span style="font-size:10px; color:rgba(255,255,255,0.4);">오차 수치화</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-item">역전파<br><span style="font-size:10px; color:rgba(255,255,255,0.4);">기울기 계산</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-item">가중치 업데이트<br><span style="font-size:10px; color:rgba(255,255,255,0.4);">W = W − α·dW</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-item" style="border-color:var(--accent); background:var(--accent-20);">반복<br><span style="font-size:10px; color:rgba(0,61,77,0.6);">Loss 수렴까지</span></div>
+    </div>
+    <div style="margin-top:24px; display:flex; gap:32px;">
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-bottom:4px;">활성화 함수</div>
+        <div style="font-size:13px; color:var(--accent); font-family:'JetBrains Mono',monospace;">Sigmoid / ReLU</div>
+      </div>
+      <div style="width:1px; background:rgba(255,255,255,0.1);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-bottom:4px;">순전파</div>
+        <div style="font-size:13px; color:var(--accent); font-family:'JetBrains Mono',monospace;">X · W → σ → Loss</div>
+      </div>
+      <div style="width:1px; background:rgba(255,255,255,0.1);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-bottom:4px;">역전파</div>
+        <div style="font-size:13px; color:var(--accent); font-family:'JetBrains Mono',monospace;">dX = dY · Wᵀ</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">12 / 13</div>
+</div>
+
+<script>
+function scrollToSlide(idx) {
+  const slides = document.querySelectorAll('.slide');
+  if (slides[idx]) slides[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+</script>
+</body>
+</html>
